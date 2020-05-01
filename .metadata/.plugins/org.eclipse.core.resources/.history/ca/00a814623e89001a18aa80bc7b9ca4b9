@@ -1,0 +1,20 @@
+/*
+ * delay.h
+ *
+ *  Created on: 21 Nis 2020
+ *      Author: Mehmet Emre
+ */
+
+#ifndef DELAY_H_
+#define DELAY_H_
+
+#include "stm32f4xx.h"
+#include "stdint.h"
+
+extern uint32_t SysTickCounter;
+
+void delay_ms(uint32_t);  // Milisaniye parametreli bekleme fonksiyonu
+void delay_s(uint8_t);   // Saniye parametreli bekleme fonksiyonu
+
+
+#endif /* DELAY_H_ */
