@@ -24,31 +24,33 @@ int8_t calc_voltage(float* fl_adcval,struct elec_params* elec_param_s);
 
 int main()
 {
-FILE *dosya;
+FILE *file;
 
-//Dosya Islemleri
+//File Operations
 
-float zaman[201],AcVolt[201], output[201];
+float time[201],AcVolt[201], output[201];
 
 int i=0;
-if((dosya=fopen("Output_AcVoltmeter.txt","r"))!=NULL)	
+if((file=fopen("Output_AcVoltmeter.txt","r"))!=NULL)	
 {	
-	while(!feof(dosya))
+	while(!feof(file))
 	{
-		fscanf(dosya,"%f %f %f",&zaman[i],&AcVolt[i],&output[i]);
-	//	printf("%.9f %.9f %.9f\n",zaman[i],AcVolt[i],output[i]);
+		fscanf(file,"%f %f %f",&time[i],&AcVolt[i],&output[i]);
+	
 		i++;
 	}
 }
-fclose(dosya);
+fclose(file);
 
 
-//Degerleri Rms hesabý icin kullanma
+// Output simulation parameter used. 
 float volt=0,sum=0,Ac_Voltage=0;
-int a,b,j=0,k=0;
-basa:printf("Lutfen istediginiz baslagic zamanini girin:\n");   scanf("%d",&a);
-sum=0;
+int a,b;
+printf("Please start time enter value:\n");   scanf("%d",&a);
 
+
+
+/*  Time from start to finish is listed.  */
 
 if(a>0)
 a=a-1;
@@ -59,7 +61,7 @@ while(a<b)
 {
 
 	
-	printf("%.5f %.5f %.5f\n",zaman[a],AcVolt[a],output[a]);
+	printf("%.5f %.5f %.5f\n",time[a],AcVolt[a],output[a]);
 	
 	a++;
  }
@@ -67,7 +69,6 @@ while(a<b)
 	calc_voltage(output,&g_elec_param_s);
 	printf("\nRms= %.2fV\n",g_elec_param_s.fl_voltage);
 	
-	goto basa;
 
 
 }
