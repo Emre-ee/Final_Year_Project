@@ -20,7 +20,11 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
+#include "lcd.h"
+#include<stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -54,7 +58,7 @@ uint32_t ADC_DATA2;
 
 uint32_t i=0;
 
-float channel_voltage=0;
+float channel_voltage;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -64,10 +68,79 @@ static void MX_ADC1_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_TIM6_Init(void);
 
+
+
 /* USER CODE BEGIN PFP */
+
+
+// Reverses a string 'str' of length 'len'
+void reverse(char* str, int len)
+{
+    int i = 0, j = len - 1, temp;
+    while (i < j) {
+        temp = str[i];
+        str[i] = str[j];
+        str[j] = temp;
+        i++;
+        j--;
+    }
+}
+
+// Converts a given integer x to string str[].
+// d is the number of digits required in the output.
+// If d is more than the number of digits in x,
+// then 0s are added at the beginning.
+int intToStr(int x, char str[], int d)
+{
+    int i = 0;
+    while (x) {
+        str[i++] = (x % 10) + '0';
+        x = x / 10;
+    }
+
+    // If number of digits required is more, then
+    // add 0s at the beginning
+    while (i < d)
+        str[i++] = '0';
+
+    reverse(str, i);
+    str[i] = '\0';
+    return i;
+}
+
+// Converts a floating-point/double number to a string.
+void ftoa(float n, char* res, int afterpoint)
+{
+    // Extract integer part
+    int ipart = (int)n;
+
+    // Extract floating part
+    float fpart = n - (float)ipart;
+
+    // convert integer part to string
+    int i = intToStr(ipart, res, 0);
+
+    // check for display option after point
+    if (afterpoint != 0) {
+        res[i] = '.'; // add dot
+
+        // Get the value of fraction part upto given no.
+        // of points after dot. The third parameter
+        // is needed to handle cases like 233.007
+        fpart = fpart * pow(10, afterpoint);
+
+        intToStr((int)fpart, res + i + 1, afterpoint);
+    }
+}
+
+
+
+
+
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
+
 
 	HAL_GPIO_TogglePin(GPIOG,GPIO_PIN_14);
 
@@ -87,15 +160,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	HAL_ADC_Stop(&hadc1);
 	/*HAL_ADC_Stop(&hadc2);*/
 
+
 	channel_voltage=(ADC_DATA1*(float)2.92)/4095;
 
-/*		i++;
 
-		if(i>=1000){
 
-		HAL_TIM_Base_Stop_IT(&htim6);
 
-		}*/
+
+
 
 }
 
@@ -104,6 +176,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
 
 /* USER CODE END 0 */
 
@@ -146,7 +219,21 @@ int main(void)
 
   GPIOG->MODER|=GPIO_MODER_MODER14_0;
 
+  /*LCD Port Ayarlari */
+  	SET_BIT(RCC->AHB1ENR,RCC_AHB1ENR_GPIOEEN);
+  	SET_BIT(RCC->AHB1ENR,RCC_AHB1ENR_GPIODEN);
+
+  	GPIOE->MODER =GPIO_MODER_MODER0_0|GPIO_MODER_MODER1_0;
+  	GPIOD->MODER =GPIO_MODER_MODER0_0|GPIO_MODER_MODER1_0|GPIO_MODER_MODER2_0|GPIO_MODER_MODER3_0;
+
+  	LCD_Init();
+  	LCD_Clear();
+
   HAL_TIM_Base_Start_IT(&htim6);
+
+  char res[100];
+
+
 
 
 
@@ -157,6 +244,11 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+
+	  	  ftoa(channel_voltage, res, 4);
+	  	  LCD_Clear();
+	  	  LCD_OutString(res,2);
+	  	 HAL_Delay(2000);
 
 
     /* USER CODE BEGIN 3 */
