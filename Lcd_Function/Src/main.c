@@ -1,23 +1,3 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
-
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "lcd.h"
@@ -25,25 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
 
-/* USER CODE END Includes */
-
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
@@ -53,12 +15,7 @@ TIM_HandleTypeDef htim6;
 
 /* USER CODE BEGIN PV */
 
-uint16_t ADC_DATA1;
-uint32_t ADC_DATA2;
 
-uint32_t i=0;
-
-float channel_voltage;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -76,14 +33,16 @@ static void MX_TIM6_Init(void);
 // Reverses a string 'str' of length 'len'
 void reverse(char* str, int len)
 {
-    int i = 0, j = len - 1, temp;
-    while (i < j) {
-        temp = str[i];
-        str[i] = str[j];
-        str[j] = temp;
-        i++;
-        j--;
-    }
+	int i = 0, j = len - 1, temp;
+
+	while (i < j)
+	{
+		temp = str[i];
+		str[i] = str[j];
+		str[j] = temp;
+		i++;
+		j--;
+	}
 }
 
 // Converts a given integer x to string str[].
@@ -93,7 +52,9 @@ void reverse(char* str, int len)
 int intToStr(int x, char str[], int d)
 {
     int i = 0;
-    while (x) {
+
+    while (x)
+    {
         str[i++] = (x % 10) + '0';
         x = x / 10;
     }
@@ -111,31 +72,39 @@ int intToStr(int x, char str[], int d)
 // Converts a floating-point/double number to a string.
 void ftoa(float n, char* res, int afterpoint)
 {
-    // Extract integer part
-    int ipart = (int)n;
+	// Extract integer part
+	int ipart = (int)n;
 
-    // Extract floating part
-    float fpart = n - (float)ipart;
+	// Extract floating part
+	float fpart = n - (float)ipart;
 
-    // convert integer part to string
-    int i = intToStr(ipart, res, 0);
+	// convert integer part to string
+	int i = intToStr(ipart, res, 0);
 
-    // check for display option after point
-    if (afterpoint != 0) {
-        res[i] = '.'; // add dot
+	// check for display option after point
+	if (afterpoint != 0)
+	{
+		res[i] = '.'; // add dot
 
-        // Get the value of fraction part upto given no.
-        // of points after dot. The third parameter
-        // is needed to handle cases like 233.007
-        fpart = fpart * pow(10, afterpoint);
+		// Get the value of fraction part upto given no.
+		// of points after dot. The third parameter
+		// is needed to handle cases like 233.007
+		fpart = fpart * pow(10, afterpoint);
 
-        intToStr((int)fpart, res + i + 1, afterpoint);
-    }
+		intToStr((int)fpart, res + i + 1, afterpoint);
+	}
 }
 
 
 
 
+/* Lcd data array. */
+char res[100];
+
+
+uint16_t ADC_DATA1;
+uint32_t ADC_DATA2;
+float channel_voltage;
 
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
@@ -164,94 +133,56 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	channel_voltage=(ADC_DATA1*(float)2.92)/4095;
 
 
-
-
-
-
-
 }
 
 
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-
-
-/* USER CODE END 0 */
-
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
   
+	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+	HAL_Init();
 
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
-
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
-  SystemClock_Config();
-
-  /* USER CODE BEGIN SysInit */
-  	  SystemInit();
-  	SystemCoreClockUpdate();
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_ADC1_Init();
-  MX_ADC2_Init();
-  MX_TIM6_Init();
-  /* USER CODE BEGIN 2 */
-
-  SET_BIT(RCC->AHB1ENR,RCC_AHB1ENR_GPIOGEN);
-
-  GPIOG->MODER|=GPIO_MODER_MODER14_0;
-
-  /*LCD Port Ayarlari */
-  	SET_BIT(RCC->AHB1ENR,RCC_AHB1ENR_GPIOEEN);
-  	SET_BIT(RCC->AHB1ENR,RCC_AHB1ENR_GPIODEN);
-
-  	GPIOE->MODER =GPIO_MODER_MODER0_0|GPIO_MODER_MODER1_0;
-  	GPIOD->MODER =GPIO_MODER_MODER0_0|GPIO_MODER_MODER1_0|GPIO_MODER_MODER2_0|GPIO_MODER_MODER3_0;
-
-  	LCD_Init();
-  	LCD_Clear();
-
-  HAL_TIM_Base_Start_IT(&htim6);
-
-  char res[100];
+	/* Configure the system clock */
+	SystemClock_Config();
+	SystemInit();
+	SystemCoreClockUpdate();
 
 
+	/* Initialize all configured peripherals */
+	MX_GPIO_Init();
+	MX_ADC1_Init();
+	MX_ADC2_Init();
+	MX_TIM6_Init();
+	/* USER CODE BEGIN 2 */
+
+	/* Gpiog led configuration */
+	SET_BIT(RCC->AHB1ENR,RCC_AHB1ENR_GPIOGEN);
+	GPIOG->MODER|=GPIO_MODER_MODER14_0;
+
+	/*LCD Port Ayarlari */
+	SET_BIT(RCC->AHB1ENR,RCC_AHB1ENR_GPIOEEN);
+	SET_BIT(RCC->AHB1ENR,RCC_AHB1ENR_GPIODEN);
+
+	GPIOE->MODER =GPIO_MODER_MODER0_0|GPIO_MODER_MODER1_0;
+	GPIOD->MODER =GPIO_MODER_MODER0_0|GPIO_MODER_MODER1_0|GPIO_MODER_MODER2_0|GPIO_MODER_MODER3_0;
+
+	LCD_Init();
+	LCD_Clear();
+
+	HAL_TIM_Base_Start_IT(&htim6);
 
 
-
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
 
-	  	  ftoa(channel_voltage, res, 4);
-	  	  LCD_Clear();
-	  	  LCD_OutString(res,2);
-	  	 HAL_Delay(2000);
+	/* Converting float to string. */
+	ftoa(channel_voltage, res, 4);
+	LCD_OutString("Voltage",1);
+	LCD_OutString(res,2);
+	HAL_Delay(1000);
 
 
-    /* USER CODE BEGIN 3 */
+
   }
   /* USER CODE END 3 */
 }
