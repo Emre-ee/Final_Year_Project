@@ -1,0 +1,8 @@
+lcd.c:31:13:OutCmd	16	static
+lcd.c:60:6:LCD_Init	8	static
+lcd.c:84:6:LCD_OutChar	16	static
+lcd.c:107:6:LCD_Clear	8	static
+lcd.c:118:6:LCD_OutString	8	static
+lcd.c:141:6:LCD_OutUDec	16	static
+lcd.c:156:6:LCD_OutUHex	8	static
+lcd.c:173:6:lcd_setcursor	0	static
