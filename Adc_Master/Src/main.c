@@ -64,6 +64,9 @@ static void MX_TIM6_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+/*  Lcd data array. */
+char str[20];
+
 uint16_t ADC_DATA1;
 uint32_t ADC_DATA2;
 float channel_voltage;
@@ -131,7 +134,7 @@ int main(void)
 	/* Timer6 Start */
 	HAL_TIM_Base_Start_IT(&htim6);
 
-	char str[20];
+
   /* USER CODE END 2 */
 
   while (1)
