@@ -23,7 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -72,13 +72,14 @@ float channel_voltage;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 
-
+	/* Timer Interrupt test led. */
 	HAL_GPIO_TogglePin(GPIOD,LED_BLUE_Pin);
 
-
+	/* ADC Start. */
 	HAL_ADC_Start(&hadc1);
 	//HAL_ADC_Start(&hadc2);
-
+	
+	/* ADC Get Value.  */
 	HAL_ADC_PollForConversion(&hadc1,1);
 	ADC_DATA1=HAL_ADC_GetValue(&hadc1);
 
@@ -87,14 +88,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	//HAL_ADC_PollForConversion(&hadc2,1);
 	//ADC_DATA2=HAL_ADC_GetValue(&hadc2);
 
-
+	/*  ADC is stopped. */
 	HAL_ADC_Stop(&hadc1);
 	//HAL_ADC_Stop(&hadc2);
-
+	
+	/* Adc value convert to voltage. */
 	channel_voltage=(ADC_DATA1*(float)2.92)/4095;
-
-
-
 
 
 }
@@ -118,12 +117,30 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
 
-  HAL_TIM_Base_Start_IT(&htim6);
+  /*LCD Port Init */
+	SET_BIT(RCC->AHB1ENR,RCC_AHB1ENR_GPIOEEN);
+	SET_BIT(RCC->AHB1ENR,RCC_AHB1ENR_GPIOBEN);
 
+	GPIOE->MODER =GPIO_MODER_MODER0_0|GPIO_MODER_MODER1_0;
+	GPIOB->MODER =GPIO_MODER_MODER0_0|GPIO_MODER_MODER1_0|GPIO_MODER_MODER2_0|GPIO_MODER_MODER3_0;
+	
+	/* Lcd Init */
+	LCD_Init();
+	LCD_Clear();
+
+	/* Timer6 Start */
+	HAL_TIM_Base_Start_IT(&htim6);
+
+	char str[20];
   /* USER CODE END 2 */
 
   while (1)
   {
+
+	   sprintf(str,"Voltage=%.2f", channel_voltage );
+	   LCD_OutString("AC Voltmeter",1);
+	   LCD_OutString(str,2);
+	   HAL_Delay(500);
 
   }
 

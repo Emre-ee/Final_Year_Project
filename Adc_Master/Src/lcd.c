@@ -14,14 +14,14 @@
   -	     = pin 8    DB1
   -   	 = pin 9    DB2
   -      = pin 10   DB3
-  PD0    = pin 11   DB4
-  PD1    = pin 12   DB5
-  PD2    = pin 13   DB6
-  PD3    = pin 14   DB7
+  PB3    = pin 11   DB4
+  PB4    = pin 12   DB5
+  PB5    = pin 13   DB6
+  PB6    = pin 14   DB7
 16 characters are configured as 1 row of 16
 addr  00 01 02 03 04 05 ... 0F
 */
-#define LCDDATA      GPIOD->ODR      /* Port 7 Output */
+#define LCDDATA      GPIOB->ODR      /* Port 7 Output */
 #define LCD_RS_ON    SET_BIT(GPIOE->ODR,GPIO_ODR_ODR_1) /* Port 9.6 Output */
 #define LCD_RS_OFF   CLEAR_BIT(GPIOE->ODR,GPIO_ODR_ODR_1)   /* Port 9.6 Output */
 #define LCD_E_ON     SET_BIT(GPIOE->ODR,GPIO_ODR_ODR_0)  /* Port 9.7 Output */
