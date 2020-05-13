@@ -1,1 +1,45 @@
-.metadata
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+
+.metadata/*
+.mylyn/.taskListIndex/
+*.log
+.plugins/org.eclipse.m2e.core/nexus/
+*.swp
+.mylyn/*
+.plugins/org.eclipse.core.resources/.root/*.tree
+.markers
+.plugins/org.eclipse.core.runtime/.settings/org.eclipse.ui.prefs
+.plugins/org.eclipse.ui.workbench/workingsets.xml
+.plugins/org.eclipse.team.cvs.core
