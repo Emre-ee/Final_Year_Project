@@ -24,6 +24,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
+#include "math.h"
+#include "lcd.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,7 +35,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define SAMPLE_NUM  40
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -64,13 +66,73 @@ static void MX_TIM6_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+struct elec_params{
+
+	float fl_voltage;
+	float fl_current;
+	float fl_pf;
+	float fl_cosfi;
+
+
+};
+
+
+/*Global variables*/
+struct elec_params g_elec_param_s;
+
+/*Voltage calculation function*/
+int8_t calc_voltage(float* fl_adcval,struct elec_params* elec_param_s);
+
+/* Adc array data counter. */
+int i=0;
+
+
+
+
+int8_t calc_voltage(float* fl_adcval,struct elec_params* elec_param_s){
+
+	uint8_t u8_i;
+
+	float fl_sumvoltage=0;
+	float fl_sample=0;
+
+
+	for(u8_i=0;u8_i<SAMPLE_NUM;u8_i++){
+
+
+	/*Devrenin matemiksel cozumu ile gerilim buyutuyoruz.*/
+	 //220 ohm direnc icin
+	//fl_sample=((fl_adcval[u8_i]-2.02245)/0.0023604);
+
+	//440 ohm direnc icin
+	fl_sample=((fl_adcval[u8_i]-2.0215)/0.0028258);
+
+	/* Buyuttugumuz gerilimin karesini aliyoruz.*/
+	fl_sample=fl_sample*fl_sample;
+
+	/* Elde ettigimiz gerilimleri topluyoruz.*/
+	fl_sumvoltage=fl_sumvoltage+fl_sample;
+
+	}
+
+	/* Topladigimiz gerilimlerin karekonunu alip Rms dgerini hesapliyoruz.*/
+	elec_param_s->fl_voltage=sqrt(fl_sumvoltage/(float)SAMPLE_NUM);
+
+
+
+
+    /*function is returned successfully*/
+   return 0;
+}
+
+
 /*  Lcd data array. */
 char str[20];
-
+char buf[20];
 uint16_t ADC_DATA1;
 uint32_t ADC_DATA2;
-float channel_voltage;
-
+float channel_voltage[200];
+float data=0;
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
@@ -96,12 +158,83 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	//HAL_ADC_Stop(&hadc2);
 	
 	/* Adc value convert to voltage. */
-	channel_voltage=(ADC_DATA1*(float)2.92)/4095;
+	channel_voltage[i]=(ADC_DATA1*(float)2.94)/4095;
+
+
+
+
+	/* Adc data is get array in 20ms. */
+		if(i<SAMPLE_NUM )
+		i++;
+		else
+		{
+			HAL_TIM_Base_Stop_IT(&htim6);
+			i=0;
+			calc_voltage(channel_voltage,&g_elec_param_s);
+		}
+
+
 
 
 }
 
+int a=0,eleman=15,indis;
+float toplam=0,dizi[40];
+float sonuc;
+float hata[]={55.23,55.23,55.23,55.23,55.23,55.10,55.10,55.10,55.10,55.10,55.10,55.10,60.85,60.85,60.85,63.3,63.3,63.3,63.3,63.3,63.3
+,64.15,64.15,64.15,64.15,64.15,64.15,64.15,62.99,65.9,67.45,67.45,68.15,68.15,68.15,68.15,68.43,69.28,69.28,69.16,69.16,
+70.16,70.64,70.64,72.16,72.16,72.16,72.89,72.89,73.59,73.59,73.59,73.33,73.33,73.33,75.073,75.073,75.073,76.49,76.49,76.86,76.86,
+77.22,77.22,77.22,77.22,76.69,79.33,79.26,79.26,79.56,79.71,79.71,81.12,81.12,81.12,81.12,81.12,80.41,84.06,84.06,84.06,84.06,
+84.06,84.06,82.24,82.24,82.24,82.11,82.32,84.395,84.395,85.035,85.035,85.45,85.45,87.38,87.15,87.75,88.70,89.88,89.88,89.83,90.42,
+90.70,91.18,91.18,92.35,92.35,93.05,93.05,93.30,93.69,93.92,93.87,93.87,94.02,95.14,95.26,95.94,96.63,97.35,97.63,98.08,98.96,
+99.22,99.22,100.26,100.26,101.52,101.9,102.77,102.76,104.23,105.45,106.67};
+float Error_Function(float* array)
+{
+	toplam=0;
+	int i=0,j=0,k=0;
 
+	/* ayni olan elemanlari diziden cikartiyoruz. */
+	   	for (i = 0; i < eleman; i++)
+		   {
+
+	      for (j = i + 1; j < eleman;)
+		  {
+	         if (dizi[j] == dizi[i])
+			 {
+	            for (k = j; k < eleman; k++)
+				{
+	            	(dizi[k]) = dizi[k + 1];
+	            }
+	            eleman--;
+	         }
+
+			 else
+	        j++;
+	      }
+	   }
+
+		/* Burada dizinin ortalamasini aliyoruz. */
+			for( i=0;i<eleman;i++)
+		{
+			toplam=toplam+dizi[i];
+
+		}
+			sonuc=toplam/(float)eleman;
+
+		if((sonuc<67))
+		sonuc=(sonuc*(float)52.99)/(float)100;
+
+		else if((sonuc>=203)&&((sonuc<250)) )
+		sonuc=(sonuc*(float)107.04)/(float)100;
+		else
+		{
+			indis=sonuc-67;
+			sonuc=(hata[indis]*sonuc)/100;
+
+		}
+
+return sonuc;
+}
 int main(void)
 {
   /* MCU Configuration--------------------------------------------------------*/
@@ -140,15 +273,30 @@ int main(void)
   while (1)
   {
 
-	   sprintf(str,"Voltage=%.2f", channel_voltage );
-	   LCD_OutString("AC Voltmeter",1);
-	   LCD_OutString(str,2);
-	   HAL_Delay(500);
 
-  }
+
+
+	 		  	calc_voltage(channel_voltage,&g_elec_param_s);
+	 		 	if(a<40)
+	 		 	{
+	 		 		dizi[a]=g_elec_param_s.fl_voltage;
+	 		 		a++;
+	 		 		HAL_TIM_Base_Start_IT(&htim6);
+	 		 	}
+	 		 	else
+	 		 	{
+	 		 		data=Error_Function(dizi);
+	 		 		sprintf(buf,"AC=%.6f",data );
+	 		 		LCD_OutString(buf,1);
+	 		 		a=0;
+	 		 		HAL_Delay(20);
+	 		 	}
+
+
+
 
 }
-
+}
 /**
   * @brief System Clock Configuration
   * @retval None
