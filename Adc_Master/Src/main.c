@@ -26,6 +26,7 @@
 #include "stdio.h"
 #include "math.h"
 #include "lcd.h"
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -35,7 +36,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define SAMPLE_NUM  40
+#define SAMPLE_NUM  120
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -83,6 +84,9 @@ struct elec_params g_elec_param_s;
 /*Voltage calculation function*/
 int8_t calc_voltage(float* fl_adcval,struct elec_params* elec_param_s);
 
+float Error_Function(float* array);
+
+
 /* Adc array data counter. */
 int i=0;
 
@@ -101,11 +105,7 @@ int8_t calc_voltage(float* fl_adcval,struct elec_params* elec_param_s){
 
 
 	/*Devrenin matemiksel cozumu ile gerilim buyutuyoruz.*/
-	 //220 ohm direnc icin
-	//fl_sample=((fl_adcval[u8_i]-2.02245)/0.0023604);
-
-	//440 ohm direnc icin
-	fl_sample=((fl_adcval[u8_i]-2.0215)/0.0028258);
+	fl_sample=(((fl_adcval[u8_i]-2.0215))/0.0028258);
 
 	/* Buyuttugumuz gerilimin karesini aliyoruz.*/
 	fl_sample=fl_sample*fl_sample;
@@ -116,7 +116,7 @@ int8_t calc_voltage(float* fl_adcval,struct elec_params* elec_param_s){
 	}
 
 	/* Topladigimiz gerilimlerin karekonunu alip Rms dgerini hesapliyoruz.*/
-	elec_param_s->fl_voltage=sqrt(fl_sumvoltage/(float)SAMPLE_NUM);
+	elec_param_s->fl_voltage=(sqrt(fl_sumvoltage/(float)SAMPLE_NUM));
 
 
 
@@ -129,41 +129,35 @@ int8_t calc_voltage(float* fl_adcval,struct elec_params* elec_param_s){
 /*  Lcd data array. */
 char str[20];
 char buf[20];
-uint16_t ADC_DATA1;
-uint32_t ADC_DATA2;
-float channel_voltage[200];
+
+
+
 float data=0;
+uint16_t ADC_DATA1;
+float channel_voltage[200];
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 
-	/* Timer Interrupt test led. */
-	HAL_GPIO_TogglePin(GPIOD,LED_BLUE_Pin);
+
 
 	/* ADC Start. */
 	HAL_ADC_Start(&hadc1);
-	//HAL_ADC_Start(&hadc2);
 	
 	/* ADC Get Value.  */
 	HAL_ADC_PollForConversion(&hadc1,1);
 	ADC_DATA1=HAL_ADC_GetValue(&hadc1);
 
-
-
-	//HAL_ADC_PollForConversion(&hadc2,1);
-	//ADC_DATA2=HAL_ADC_GetValue(&hadc2);
-
 	/*  ADC is stopped. */
 	HAL_ADC_Stop(&hadc1);
-	//HAL_ADC_Stop(&hadc2);
 	
 	/* Adc value convert to voltage. */
-	channel_voltage[i]=(ADC_DATA1*(float)2.94)/4095;
+	channel_voltage[i]=(ADC_DATA1*(float)3)/4095;
 
 
 
 
-	/* Adc data is get array in 20ms. */
+	/* Adc data is get array in SAMPLE_NUM. */
 		if(i<SAMPLE_NUM )
 		i++;
 		else
@@ -178,63 +172,185 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 }
 
-int a=0,eleman=15,indis;
-float toplam=0,dizi[40];
-float sonuc;
-float hata[]={55.23,55.23,55.23,55.23,55.23,55.10,55.10,55.10,55.10,55.10,55.10,55.10,60.85,60.85,60.85,63.3,63.3,63.3,63.3,63.3,63.3
-,64.15,64.15,64.15,64.15,64.15,64.15,64.15,62.99,65.9,67.45,67.45,68.15,68.15,68.15,68.15,68.43,69.28,69.28,69.16,69.16,
-70.16,70.64,70.64,72.16,72.16,72.16,72.89,72.89,73.59,73.59,73.59,73.33,73.33,73.33,75.073,75.073,75.073,76.49,76.49,76.86,76.86,
-77.22,77.22,77.22,77.22,76.69,79.33,79.26,79.26,79.56,79.71,79.71,81.12,81.12,81.12,81.12,81.12,80.41,84.06,84.06,84.06,84.06,
-84.06,84.06,82.24,82.24,82.24,82.11,82.32,84.395,84.395,85.035,85.035,85.45,85.45,87.38,87.15,87.75,88.70,89.88,89.88,89.83,90.42,
-90.70,91.18,91.18,92.35,92.35,93.05,93.05,93.30,93.69,93.92,93.87,93.87,94.02,95.14,95.26,95.94,96.63,97.35,97.63,98.08,98.96,
-99.22,99.22,100.26,100.26,101.52,101.9,102.77,102.76,104.23,105.45,106.67};
+
+
+
+float dizi[80];
+int u=0,a=0,eleman=10,medyan=0;
+
+float hata[66][8]={
+					{49.12,81,82,83,84,85},
+					{50.28,86,87,88,89,90,91},
+					{51.97,92,93},
+					{53.19,94,95,96,97},
+					{53.81,98,99},
+					{57.29,100,101,102},
+					{57.81,103,104},
+					{59.75,105,106,107,108},
+					{60.43,109},
+					{61.82,110,111,112},
+					{61.95,113},
+					{63.16,114,115,116,117},
+					{64.30,118,119,120},
+					{65.40,121,122,123},
+					{66.18,124,125,126},
+					{66.85,127,128},
+					{68.04,129,130},
+					{68.51,131},
+					{70.24,132,133,134},
+					{70.52,135,136},
+					{71.61,137,138},
+					{72.20,139,140,141,142},
+					{72.98,143,144,145},
+					{73.9,146,147},
+					{75.68,148},
+					{76.51,149,150},
+					{76.75,151,152},
+					{77.84,153},
+					{78.52,154,155},
+					{79.41,156,157},
+					{79.53,158,159},
+					{80.42,160},
+					{81.37,161,162,163},
+					{81.31,164,165},
+					{81.85,166,167},
+					{82.95,168,169},
+					{83.65,170,171},
+					{84.11,172,173},
+					{85.30,174,175,176},
+					{86.12,177,178},
+					{86.66,179,180,181,182},
+					{86.98,183},
+					{88.72,184},
+					{89.19,185,186},
+					{89.84,187},
+					{90.43,188,189},
+					{90.53,190},
+					{91.46,191,192},
+					{92.785,193,194,195},
+					{95.09,196,197},		//buradan itibaren +2.0 eklendi.
+					{95.67,198},
+					{96.47,199},
+					{97.50,200},
+					{98.02,201,202,203},
+					{98.93,204},
+					{100.29,205},			// buraya kadar.
+					{103.03,206},	//buradan itibaren +4.0 eklendi.
+					{103.27,207},
+					{103.52,208},
+					{105.84,209,210},
+					{108.49,211},
+					{110.49,212},
+					{111.49,213},
+					{112.49,214},
+					{113.49,215},
+					{114.49,216},
+};
+
+float temp,ort,sum[30],toplam=0,sonuc=0;
+int count=0,j=0;
 float Error_Function(float* array)
 {
+	i=0,j=0;
+	count=0;
 	toplam=0;
-	int i=0,j=0,k=0;
-
-	/* ayni olan elemanlari diziden cikartiyoruz. */
-	   	for (i = 0; i < eleman; i++)
-		   {
-
-	      for (j = i + 1; j < eleman;)
-		  {
-	         if (dizi[j] == dizi[i])
-			 {
-	            for (k = j; k < eleman; k++)
-				{
-	            	(dizi[k]) = dizi[k + 1];
-	            }
-	            eleman--;
-	         }
-
-			 else
-	        j++;
-	      }
-	   }
+	bool Check_OK=0;
 
 		/* Burada dizinin ortalamasini aliyoruz. */
-			for( i=0;i<eleman;i++)
+		for(int i=0;i<eleman;i++)
 		{
-			toplam=toplam+dizi[i];
+			toplam=toplam+array[i];
 
 		}
-			sonuc=toplam/(float)eleman;
+			ort=toplam/(float)eleman;
 
-		if((sonuc<67))
-		sonuc=(sonuc*(float)52.99)/(float)100;
 
-		else if((sonuc>=203)&&((sonuc<250)) )
-		sonuc=(sonuc*(float)107.04)/(float)100;
+
+		/* Medyan Value*/
+		if(u<10)
+		{
+
+		 sum[u]=ort;
+		 u++;
+		}
+
 		else
 		{
-			indis=sonuc-67;
-			sonuc=(hata[indis]*sonuc)/100;
+			u=0;
+
+			for(i=0;i<(10-1);i++)
+			{
+				for(int j=0;j<(10-1);j++)
+				{
+					if(sum[j]>sum[j+1])
+					{
+						temp=sum[j];
+						sum[j]=sum[j+1];
+						sum[j+1]=temp;
+					}
+				}
+			}
+
+			medyan=sum[5];
+		}
+
+		if(u==0)
+		{
+
+
+			/*Hata oranlari ile carpiyoruz.*/
+
+			/*81 ve alt hata degerleri icin ve 216 dan 230 arasi degerler icin if kullandim*/
+			if((medyan<81))
+			sonuc=(medyan*(float)43.04)/(float)100;
+
+			if((medyan>216)&&(medyan<230))
+			sonuc=(medyan*(float)111.49)/(float)100;
+
+			while((j<66)&&(Check_OK==0))
+					{
+						i=0;
+						/* Satir eleman sayisini hesapliyorum. */
+						while (hata[j][i+1] != 0)
+						{
+							i++;
+			    		}
+
+			    		/* Satirdaki elemanlari gelen medyan degeri ile karsilastirip hata payi ile  carpiyorum.*/
+			    		for(count=0;count<i;)
+			    		{
+			    			/* Medyan degerini satirda buldugum anda for dongusunu tamamlamasini istiyorum. */
+			    			if(medyan==hata[j][count+1])
+			    			{
+			    				sonuc=(medyan*hata[j][0])/(float)100;
+			    				Check_OK=1;
+			    				break;
+							}
+							/* Satirdaki elemanlar ile karsilastirma yapiyorum. */
+			    			else
+			    			count++;
+						}
+						/* Eger degeri bulursam while donguden cikiyorum. */
+						if(Check_OK==1)
+						{
+							j=0;
+							break;
+						}
+						/* Her satýra bakiyorum. */
+						else
+						j++;
+
+					}
+
 
 		}
 
-return sonuc;
+		return sonuc;
 }
+
+
+
+
 int main(void)
 {
   /* MCU Configuration--------------------------------------------------------*/
@@ -272,13 +388,10 @@ int main(void)
 
   while (1)
   {
-
-
-
-
-	 		  	calc_voltage(channel_voltage,&g_elec_param_s);
-	 		 	if(a<40)
+  	  	  	  //Calibration if-else.
+	 			if(a<10)
 	 		 	{
+
 	 		 		dizi[a]=g_elec_param_s.fl_voltage;
 	 		 		a++;
 	 		 		HAL_TIM_Base_Start_IT(&htim6);
@@ -286,11 +399,12 @@ int main(void)
 	 		 	else
 	 		 	{
 	 		 		data=Error_Function(dizi);
-	 		 		sprintf(buf,"AC=%.6f",data );
-	 		 		LCD_OutString(buf,1);
-	 		 		a=0;
-	 		 		HAL_Delay(20);
-	 		 	}
+					sprintf(buf,"AC=%.3f",data );
+					LCD_OutString(buf,2);
+					LCD_OutString("Rms Voltage",1);
+					a=0;
+					}
+
 
 
 
@@ -359,7 +473,7 @@ static void MX_ADC1_Init(void)
   /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.ScanConvMode = DISABLE;
   hadc1.Init.ContinuousConvMode = DISABLE;
@@ -378,7 +492,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_10;
   sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
