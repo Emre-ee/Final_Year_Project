@@ -24,6 +24,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
+#include "math.h"
+#include "lcd.h"
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,7 +36,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define SAMPLE_NUM  120
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -64,42 +67,299 @@ static void MX_TIM6_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+
+
+
+
+float Error_Array[66][8]={
+					{49.12,81,82,83,84,85},
+					{50.28,86,87,88,89,90,91},
+					{51.97,92,93},
+					{53.19,94,95,96,97},
+					{53.81,98,99},
+					{57.29,100,101,102},
+					{57.81,103,104},
+					{59.75,105,106,107,108},
+					{60.43,109},
+					{61.82,110,111,112},
+					{61.95,113},
+					{63.16,114,115,116,117},
+					{64.30,118,119,120},
+					{65.40,121,122,123},
+					{66.18,124,125,126},
+					{66.85,127,128},
+					{68.04,129,130},
+					{68.51,131},
+					{70.24,132,133,134},
+					{70.52,135,136},
+					{71.61,137,138},
+					{72.20,139,140,141,142},
+					{72.98,143,144,145},
+					{73.9,146,147},
+					{75.68,148},
+					{76.51,149,150},
+					{76.75,151,152},
+					{77.84,153},
+					{78.52,154,155},
+					{79.41,156,157},
+					{79.53,158,159},
+					{80.42,160},
+					{81.37,161,162,163},
+					{81.31,164,165},
+					{81.85,166,167},
+					{82.95,168,169},
+					{83.65,170,171},
+					{84.11,172,173},
+					{85.30,174,175,176},
+					{86.12,177,178},
+					{86.66,179,180,181,182},
+					{86.98,183},
+					{88.72,184},
+					{89.19,185,186},
+					{89.84,187},
+					{90.43,188,189},
+					{90.53,190},
+					{91.46,191,192},
+					{92.785,193,194,195},
+					{95.09,196,197},
+					{95.67,198},
+					{96.47,199},
+					{97.50,200},
+					{98.02,201,202,203},
+					{98.93,204},
+					{100.29,205},
+					{102.03,206},
+					{102.27,207},
+					{102.52,208},
+					{104.84,209,210},
+					{107.49,211},
+					{109.49,212},
+					{110.49,213},
+					{111.49,214},
+					{112.49,215},
+					{113.49,216},
+};
+
+
+
+
+struct elec_params{
+
+	float fl_voltage;
+	float fl_current;
+	float fl_pf;
+	float fl_cosfi;
+
+
+};
+
+
+/*Global variables*/
+struct elec_params g_elec_param_s;
+
+/*Voltage calculation function*/
+int8_t calc_voltage(float* fl_adcval,struct elec_params* elec_param_s);
+
+float Error_Function(float* array);
+
+
+
+
+
+
+
+int8_t calc_voltage(float* fl_adcval,struct elec_params* elec_param_s){
+
+	uint8_t u8_i;
+
+	float fl_sumvoltage=0;
+	float fl_sample=0;
+
+
+	for(u8_i=0;u8_i<SAMPLE_NUM;u8_i++){
+
+
+	/*We increase the voltage with the mathematical solution of the circuit.*/
+	fl_sample=(((fl_adcval[u8_i]-2.0215))/0.0028258);
+
+	/* We take the square of the voltage.*/
+	fl_sample=fl_sample*fl_sample;
+
+	/* We sum the voltages we obtain.*/
+	fl_sumvoltage=fl_sumvoltage+fl_sample;
+
+	}
+
+	/* We take the square root of voltages and we find the Rms  value.*/
+	elec_param_s->fl_voltage=(sqrt(fl_sumvoltage/(float)SAMPLE_NUM));
+
+
+
+
+    /*function is returned successfully*/
+   return 0;
+}
+
+
 /*  Lcd data array. */
 char str[20];
+char buf[20];
 
+/* Adc array data counter. */
+int i=0;
+
+/* Adc data array and adc value. */
 uint16_t ADC_DATA1;
-uint32_t ADC_DATA2;
-float channel_voltage;
-
+float channel_voltage[200];
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 
-	/* Timer Interrupt test led. */
-	HAL_GPIO_TogglePin(GPIOD,LED_BLUE_Pin);
+
 
 	/* ADC Start. */
 	HAL_ADC_Start(&hadc1);
-	//HAL_ADC_Start(&hadc2);
 	
 	/* ADC Get Value.  */
 	HAL_ADC_PollForConversion(&hadc1,1);
 	ADC_DATA1=HAL_ADC_GetValue(&hadc1);
 
-
-
-	//HAL_ADC_PollForConversion(&hadc2,1);
-	//ADC_DATA2=HAL_ADC_GetValue(&hadc2);
-
 	/*  ADC is stopped. */
 	HAL_ADC_Stop(&hadc1);
-	//HAL_ADC_Stop(&hadc2);
 	
 	/* Adc value convert to voltage. */
-	channel_voltage=(ADC_DATA1*(float)2.92)/4095;
+	channel_voltage[i]=(ADC_DATA1*(float)3)/4095;
+
+
+
+
+	/* Adc data is get array in SAMPLE_NUM. */
+		if(i<SAMPLE_NUM )
+		i++;
+
+		else
+		{
+			i=0;
+			HAL_TIM_Base_Stop_IT(&htim6);
+			calc_voltage(channel_voltage,&g_elec_param_s);		// Go to calc_voltage function and calculate rms.
+		}
+
+
 
 
 }
+
+
+
+float Rms_Voltage=0,temp,Average,Sum=0,Ac_Voltage_Value=0;
+float Average_Array[30],Sample_Data_Array[80];
+int Average_Counter=0,Array_Counter=0,count=0;
+int Sample_Data_Number=10,Median_Value=0,Line_Counter=0,Column_Counter;
+
+float Error_Function(float* array)
+{
+	Column_Counter=0,Line_Counter=0;
+	count=0;
+	Sum=0;
+	bool Check_OK=0;
+
+		/* We take average of the  sample array in while loop. */
+		for(int i=0;i<Sample_Data_Number;i++)
+		{
+			Sum=Sum+array[i];
+
+		}
+		Average=Sum/(float)Sample_Data_Number;
+
+
+
+		/* We write the average values into the array to calculate the median. */
+		if(Average_Counter<10)
+		{
+
+		 Average_Array[Average_Counter]=Average;
+		 Average_Counter++;
+		}
+
+		else
+		{
+			Average_Counter=0;
+
+			for(i=0;i<(10-1);i++)
+			{
+				for(int j=0;j<(10-1);j++)
+				{
+					if(Average_Array[j]>Average_Array[j+1])
+					{
+						temp=Average_Array[j];
+						Average_Array[j]=Average_Array[j+1];
+						Average_Array[j+1]=temp;
+					}
+				}
+			}
+
+			Median_Value=Average_Array[5];
+		}
+
+		/* We have to ready. We will calculate Ac_Voltage. */
+		if(Average_Counter==0)
+		{
+
+
+
+			/*I used if for values of 81 and below and values from 216 to 230.*/
+			if((Median_Value<81))
+			Ac_Voltage_Value=(Median_Value*(float)43.04)/(float)100;
+
+			if((Median_Value>216)&&(Median_Value<230))
+			Ac_Voltage_Value=(Median_Value*(float)111.49)/(float)100;
+
+			while((Line_Counter<66)&&(Check_OK==0))
+			{
+				Column_Counter=0;
+
+				/* I calculate element number of line in array .*/
+				while (Error_Array[Line_Counter][Column_Counter+1] != 0)
+				{
+					Column_Counter++;
+				}
+
+				/* I am trying to find the error factor by comparing the median value with the numbers in the array.*/
+				for(count=0;count<Column_Counter;)
+				{
+				    /* After finding the range of numbers in the array with the median value, I multiply by the error factor in index 0. */
+					if(Median_Value==Error_Array[Line_Counter][count+1])
+					{
+						Ac_Voltage_Value=(Median_Value*Error_Array[Line_Counter][0])/(float)100;
+						Check_OK=1;
+						break;
+					}
+
+
+					else
+					count++;
+
+				}
+
+				/* As soon as I find the error multiplier, I get out of the while loop. */
+				if(Check_OK==1)
+				{
+					Line_Counter=0;
+					break;
+				}
+				/* If I can't find the value, I increase j, the line counter. */
+				else
+					Line_Counter++;
+
+			}
+
+
+		}
+
+		return Ac_Voltage_Value;
+}
+
+
 
 
 int main(void)
@@ -139,16 +399,29 @@ int main(void)
 
   while (1)
   {
+  	  	  	  //Calibration if-else.
+	 			if(Array_Counter<10)
+	 		 	{
 
-	   sprintf(str,"Voltage=%.2f", channel_voltage );
-	   LCD_OutString("AC Voltmeter",1);
-	   LCD_OutString(str,2);
-	   HAL_Delay(500);
+	 		 		Sample_Data_Array[Array_Counter]=g_elec_param_s.fl_voltage;
+	 		 		Array_Counter++;
+	 		 		HAL_TIM_Base_Start_IT(&htim6);
+	 		 	}
+	 		 	else
+	 		 	{
+	 		 		Rms_Voltage=Error_Function(Sample_Data_Array);
+					sprintf(buf,"AC=%.3f",Rms_Voltage );
+					LCD_OutString(buf,2);
+					LCD_OutString("Rms Voltage",1);
+					Array_Counter=0;
+				}
 
-  }
+
+
+
 
 }
-
+}
 /**
   * @brief System Clock Configuration
   * @retval None
@@ -211,7 +484,7 @@ static void MX_ADC1_Init(void)
   /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.ScanConvMode = DISABLE;
   hadc1.Init.ContinuousConvMode = DISABLE;
@@ -230,7 +503,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_10;
   sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
