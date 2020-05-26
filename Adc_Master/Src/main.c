@@ -67,112 +67,6 @@ static void MX_TIM6_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-struct elec_params{
-
-	float fl_voltage;
-	float fl_current;
-	float fl_pf;
-	float fl_cosfi;
-
-
-};
-
-
-/*Global variables*/
-struct elec_params g_elec_param_s;
-
-/*Voltage calculation function*/
-int8_t calc_voltage(float* fl_adcval,struct elec_params* elec_param_s);
-
-float Error_Function(float* array);
-
-
-/* Adc array data counter. */
-int i=0;
-
-
-
-
-int8_t calc_voltage(float* fl_adcval,struct elec_params* elec_param_s){
-
-	uint8_t u8_i;
-
-	float fl_sumvoltage=0;
-	float fl_sample=0;
-
-
-	for(u8_i=0;u8_i<SAMPLE_NUM;u8_i++){
-
-
-	/*We increase the voltage with the mathematical solution of the circuit.*/
-	fl_sample=(((fl_adcval[u8_i]-2.0215))/0.0028258);
-
-	/* We take the square of the voltage.*/
-	fl_sample=fl_sample*fl_sample;
-
-	/* We sum the voltages we obtain.*/
-	fl_sumvoltage=fl_sumvoltage+fl_sample;
-
-	}
-
-	/* We take the square root of voltages and we find the Rms  value.*/
-	elec_param_s->fl_voltage=(sqrt(fl_sumvoltage/(float)SAMPLE_NUM));
-
-
-
-
-    /*function is returned successfully*/
-   return 0;
-}
-
-
-/*  Lcd data array. */
-char str[20];
-char buf[20];
-
-
-
-/* Adc data array and adc value. */
-uint16_t ADC_DATA1;
-float channel_voltage[200];
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-
-
-
-	/* ADC Start. */
-	HAL_ADC_Start(&hadc1);
-	
-	/* ADC Get Value.  */
-	HAL_ADC_PollForConversion(&hadc1,1);
-	ADC_DATA1=HAL_ADC_GetValue(&hadc1);
-
-	/*  ADC is stopped. */
-	HAL_ADC_Stop(&hadc1);
-	
-	/* Adc value convert to voltage. */
-	channel_voltage[i]=(ADC_DATA1*(float)3)/4095;
-
-
-
-
-	/* Adc data is get array in SAMPLE_NUM. */
-		if(i<SAMPLE_NUM )
-		i++;
-
-		else
-		{
-			i=0;
-			HAL_TIM_Base_Stop_IT(&htim6);
-			calc_voltage(channel_voltage,&g_elec_param_s);		// Go to calc_voltage function and calculate rms.
-		}
-
-
-
-
-}
-
 
 
 
@@ -245,6 +139,117 @@ float Error_Array[66][8]={
 					{112.49,215},
 					{113.49,216},
 };
+
+
+
+
+struct elec_params{
+
+	float fl_voltage;
+	float fl_current;
+	float fl_pf;
+	float fl_cosfi;
+
+
+};
+
+
+/*Global variables*/
+struct elec_params g_elec_param_s;
+
+/*Voltage calculation function*/
+int8_t calc_voltage(float* fl_adcval,struct elec_params* elec_param_s);
+
+float Error_Function(float* array);
+
+
+
+
+
+
+
+int8_t calc_voltage(float* fl_adcval,struct elec_params* elec_param_s){
+
+	uint8_t u8_i;
+
+	float fl_sumvoltage=0;
+	float fl_sample=0;
+
+
+	for(u8_i=0;u8_i<SAMPLE_NUM;u8_i++){
+
+
+	/*We increase the voltage with the mathematical solution of the circuit.*/
+	fl_sample=(((fl_adcval[u8_i]-2.0215))/0.0028258);
+
+	/* We take the square of the voltage.*/
+	fl_sample=fl_sample*fl_sample;
+
+	/* We sum the voltages we obtain.*/
+	fl_sumvoltage=fl_sumvoltage+fl_sample;
+
+	}
+
+	/* We take the square root of voltages and we find the Rms  value.*/
+	elec_param_s->fl_voltage=(sqrt(fl_sumvoltage/(float)SAMPLE_NUM));
+
+
+
+
+    /*function is returned successfully*/
+   return 0;
+}
+
+
+/*  Lcd data array. */
+char str[20];
+char buf[20];
+
+/* Adc array data counter. */
+int i=0;
+
+/* Adc data array and adc value. */
+uint16_t ADC_DATA1;
+float channel_voltage[200];
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+
+
+
+	/* ADC Start. */
+	HAL_ADC_Start(&hadc1);
+	
+	/* ADC Get Value.  */
+	HAL_ADC_PollForConversion(&hadc1,1);
+	ADC_DATA1=HAL_ADC_GetValue(&hadc1);
+
+	/*  ADC is stopped. */
+	HAL_ADC_Stop(&hadc1);
+	
+	/* Adc value convert to voltage. */
+	channel_voltage[i]=(ADC_DATA1*(float)3)/4095;
+
+
+
+
+	/* Adc data is get array in SAMPLE_NUM. */
+		if(i<SAMPLE_NUM )
+		i++;
+
+		else
+		{
+			i=0;
+			HAL_TIM_Base_Stop_IT(&htim6);
+			calc_voltage(channel_voltage,&g_elec_param_s);		// Go to calc_voltage function and calculate rms.
+		}
+
+
+
+
+}
+
+
 
 float Rms_Voltage=0,temp,Average,Sum=0,Ac_Voltage_Value=0;
 float Average_Array[30],Sample_Data_Array[80];
