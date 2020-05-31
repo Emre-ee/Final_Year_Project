@@ -27,6 +27,7 @@
 #include "math.h"
 #include "lcd.h"
 #include <stdbool.h>
+#include "elecParamCalc.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,7 +37,10 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define SAMPLE_NUM  120
+#define SAMPLE_NUM  200
+#define VCC  5.01					// supply voltage is from 4.5 to 5.5V. Normally 5V.
+#define AMP_MODE 0
+#define VOLT_MODE 1
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -72,128 +76,136 @@ static void MX_TIM6_Init(void);
 
 
 float Error_Array[66][8]={
-					{49.12,81,82,83,84,85},
-					{50.28,86,87,88,89,90,91},
-					{51.97,92,93},
-					{53.19,94,95,96,97},
-					{53.81,98,99},
-					{57.29,100,101,102},
-					{57.81,103,104},
-					{59.75,105,106,107,108},
-					{60.43,109},
-					{61.82,110,111,112},
-					{61.95,113},
-					{63.16,114,115,116,117},
-					{64.30,118,119,120},
-					{65.40,121,122,123},
-					{66.18,124,125,126},
-					{66.85,127,128},
-					{68.04,129,130},
-					{68.51,131},
-					{70.24,132,133,134},
-					{70.52,135,136},
-					{71.61,137,138},
-					{72.20,139,140,141,142},
-					{72.98,143,144,145},
-					{73.9,146,147},
-					{75.68,148},
-					{76.51,149,150},
-					{76.75,151,152},
-					{77.84,153},
-					{78.52,154,155},
-					{79.41,156,157},
-					{79.53,158,159},
-					{80.42,160},
-					{81.37,161,162,163},
-					{81.31,164,165},
-					{81.85,166,167},
-					{82.95,168,169},
-					{83.65,170,171},
-					{84.11,172,173},
-					{85.30,174,175,176},
-					{86.12,177,178},
-					{86.66,179,180,181,182},
-					{86.98,183},
-					{88.72,184},
-					{89.19,185,186},
-					{89.84,187},
-					{90.43,188,189},
-					{90.53,190},
-					{91.46,191,192},
-					{92.785,193,194,195},
-					{95.09,196,197},
-					{95.67,198},
-					{96.47,199},
-					{97.50,200},
-					{98.02,201,202,203},
-					{98.93,204},
-					{100.29,205},
-					{102.03,206},
-					{102.27,207},
-					{102.52,208},
-					{104.84,209,210},
-					{107.49,211},
-					{109.49,212},
-					{110.49,213},
-					{111.49,214},
-					{112.49,215},
-					{113.49,216},
+		{49.12,81,82,83,84,85},
+							{50.28,86,87,88,89,90,91},
+							{51.97,92,93},
+							{53.19,94,95,96,97},
+							{53.81,98,99},
+							{57.29,100,101,102},
+							{57.81,103,104},
+							{59.75,105,106,107,108},
+							{60.43,109},
+							{61.82,110,111,112},
+							{61.95,113},
+							{63.16,114,115,116,117},
+							{64.30,118,119,120},
+							{65.40,121,122,123},
+							{66.18,124,125,126},
+							{66.85,127,128},
+							{68.04,129,130},
+							{68.51,131},
+							{70.24,132,133,134},
+							{70.52,135,136},
+							{71.61,137,138},
+							{72.20,139,140,141,142},
+							{72.98,143,144,145},
+							{73.9,146,147},
+							{75.68,148},
+							{76.51,149,150},
+							{76.75,151,152},
+							{77.84,153},
+							{78.52,154,155},
+							{79.41,156,157},
+							{79.53,158,159},
+							{80.42,160},
+							{81.37,161,162,163},
+							{81.31,164,165},
+							{81.85,166,167},
+							{82.95,168,169},
+							{83.65,170,171},
+							{84.11,172,173},
+							{85.30,174,175,176},
+							{86.12,177,178},
+							{86.66,179,180,181,182},
+							{86.98,183},
+							{88.72,184},
+							{89.19,185,186},
+							{89.84,187},
+							{90.43,188,189},
+							{90.53,190},
+							{91.46,191,192},
+							{92.785,193,194,195},
+							{95.09,196,197},
+							{95.67,198},
+							{96.47,199},
+							{99.50,200},		//2.0
+							{100.02,201,202,203},
+							{100.93,204},
+							{104.29,205},    // +4.0
+							{106.03,206},
+							{106.27,207},
+							{106.52,208},
+							{108.84,209,210},
+							{111.49,211},
+							{113.49,212},
+							{114.49,213},
+							{115.49,214},
+							{116.49,215},
+							{117.49,216},
 };
 
 
 
 
-struct elec_params{
-
-	float fl_voltage;
-	float fl_current;
-	float fl_pf;
-	float fl_cosfi;
 
 
-};
-
-
-/*Global variables*/
-struct elec_params g_elec_param_s;
 
 /*Voltage calculation function*/
-int8_t calc_voltage(float* fl_adcval,struct elec_params* elec_param_s);
+uint8_t calc_Rms(uint8_t mode,float* fl_adcval,struct elec_params* elec_param_s);
+uint8_t calc_Voltage(float* fl_adcval);
+uint8_t calc_Current(float* fl_adcval);
 
 float Error_Function(float* array);
 
 
+int model = 2;   // enter the model number (see below)
+
+const float sensitivity[] ={
+          0.185,// for ACS712ELCTR-05B-T --	0
+          0.100,// for ACS712ELCTR-20A-T --	1
+          0.066// for ACS712ELCTR-30A-T	 --	2
+
+         };
 
 
+float QOV =   0.5 * VCC;// set quiescent Output voltage of 0.5V
 
 
+uint8_t calc_Rms(uint8_t mode,float* fl_adcval,struct elec_params* elec_param_s){
 
-int8_t calc_voltage(float* fl_adcval,struct elec_params* elec_param_s){
-
+	/* Adc adc_value_data counter */
 	uint8_t u8_i;
 
-	float fl_sumvoltage=0;
+	/* Voltage Variables */
+	float fl_sum=0;
 	float fl_sample=0;
 
 
 	for(u8_i=0;u8_i<SAMPLE_NUM;u8_i++){
 
-
-	/*We increase the voltage with the mathematical solution of the circuit.*/
-	fl_sample=(((fl_adcval[u8_i]-2.0215))/0.0028258);
-
 	/* We take the square of the voltage.*/
-	fl_sample=fl_sample*fl_sample;
+	fl_sample=fl_adcval[u8_i]*fl_adcval[u8_i];
 
 	/* We sum the voltages we obtain.*/
-	fl_sumvoltage=fl_sumvoltage+fl_sample;
-
+	fl_sum=fl_sum+fl_sample;
 	}
 
+	if(mode==VOLT_MODE)
 	/* We take the square root of voltages and we find the Rms  value.*/
-	elec_param_s->fl_voltage=(sqrt(fl_sumvoltage/(float)SAMPLE_NUM));
+	elec_param_s->fl_voltage=(sqrt(fl_sum/(float)SAMPLE_NUM));
+
+	if(mode==AMP_MODE)
+	{
+		/* We take the square root of voltages and we find the Rms  value.*/
+
+		    elec_param_s->fl_current=(sqrt(fl_sum/(float)SAMPLE_NUM));
+		   	if((elec_param_s->fl_current>0.26)&&(elec_param_s->fl_current<30))
+			elec_param_s->fl_current=(sqrt(fl_sum/(float)SAMPLE_NUM))-0.28;
+		   	else
+		   	elec_param_s->fl_current=0;
 
 
+	}
 
 
     /*function is returned successfully*/
@@ -201,16 +213,65 @@ int8_t calc_voltage(float* fl_adcval,struct elec_params* elec_param_s){
 }
 
 
-/*  Lcd data array. */
+
+uint8_t calc_Current(float* fl_adcval)
+{
+
+	/*  Current Rms Operations */
+
+		uint8_t u8_i;
+		float fl_current[SAMPLE_NUM];
+		for(u8_i=0;u8_i<SAMPLE_NUM;u8_i++)
+		{
+
+			fl_current[u8_i] =  ((fl_adcval[u8_i]*1.67)-QOV);
+			fl_current[u8_i] = fl_current[u8_i] / sensitivity[2];
+
+		}
+			calc_Rms(AMP_MODE,fl_current,&g_elec_param_s);
+
+
+			return 0;
+
+}
+
+
+
+ uint8_t calc_Voltage(float* fl_adcval)
+{
+	/* Adc adc_value_data counter */
+	uint8_t u8_i;
+	float fl_volt[SAMPLE_NUM];
+
+	for(u8_i=0;u8_i<SAMPLE_NUM;u8_i++)
+	{
+
+		fl_volt[u8_i]=(((fl_adcval[u8_i]-2.0215))/0.0028258);
+
+	}
+	calc_Rms(VOLT_MODE,fl_volt,&g_elec_param_s);
+
+	/*We increase the voltage with the mathematical solution of the circuit.*/
+
+
+	return 0;
+}
+
+
+
+
+
+/*  Lcd data array and update lcd counter. */
 char str[20];
 char buf[20];
+uint8_t lcd_UpdateCounter=0;
 
 /* Adc array data counter. */
 int i=0;
 
 /* Adc data array and adc value. */
-uint16_t ADC_DATA1;
-float channel_voltage[200];
+uint16_t ADC_DATA1,ADC_DATA2;
+float channel_voltage[200],channel_voltage_2[200];
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
@@ -219,16 +280,23 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 	/* ADC Start. */
 	HAL_ADC_Start(&hadc1);
+	HAL_ADC_Start(&hadc2);
 	
 	/* ADC Get Value.  */
 	HAL_ADC_PollForConversion(&hadc1,1);
 	ADC_DATA1=HAL_ADC_GetValue(&hadc1);
 
+	HAL_ADC_PollForConversion(&hadc2,1);
+	ADC_DATA2=HAL_ADC_GetValue(&hadc2);
+
 	/*  ADC is stopped. */
 	HAL_ADC_Stop(&hadc1);
+	HAL_ADC_Stop(&hadc2);
 	
 	/* Adc value convert to voltage. */
 	channel_voltage[i]=(ADC_DATA1*(float)3)/4095;
+	channel_voltage_2[i]=((ADC_DATA2*(float)3)/4095)-0.03;
+
 
 
 
@@ -241,7 +309,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		{
 			i=0;
 			HAL_TIM_Base_Stop_IT(&htim6);
-			calc_voltage(channel_voltage,&g_elec_param_s);		// Go to calc_voltage function and calculate rms.
+			calc_Voltage(channel_voltage);		// Go to calc_voltage function and calculate rms.
+			calc_Current(channel_voltage_2);		// Go to calc_voltage function and calculate rms.
 		}
 
 
@@ -251,18 +320,41 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 
 
-float Rms_Voltage=0,temp,Average,Sum=0,Ac_Voltage_Value=0;
-float Average_Array[30],Sample_Data_Array[80];
-int Average_Counter=0,Array_Counter=0,count=0;
-int Sample_Data_Number=10,Median_Value=0,Line_Counter=0,Column_Counter;
+/*
+ * uint8_t u8_rmsVoltage;
+ * float   fl_avgArr;
+ * float   fl_sampleDataArr;
+ *
+ *
+ * Functions
+ *
+ * elecParamCalc.c
+ *
+ * int8_t elecParamCalc_calcRms(float fl_*,){
+ *
+ * int8_t i8_retval=CALC_NO_ERROR;
+ *
+ *
+ *return i8_retval;
+ * }
+ * */
 
+float Rms_Voltage=0,temp,Average,Sum=0,Ac_Voltage_Value=0;  // Bitti.
+float Average_Array[30],Sample_Data_Array[80];				//Bitti.
+int Average_Counter=0,Array_Counter=0,count=0;				//Bitti.
+int Sample_Data_Number=10,Median_Value=0,Line_Counter=0,Column_Counter;	//bitti.
+
+float fl_rms_Voltage=0,fl_temp,fl_avg,fl_sum=0,fl_acVolt=0;
+float fl_avgArr[30],fl_sampleDataArr[80];
+uint8_t u8_avgCount=0, u8_arrCount=0,u8_medCount=0;
+uint8_t u8_sampleDataNum=10, u8_medVal=0,u8_lineCount=0,u8_columnCount=0;
+bool Check_OK=0;
 float Error_Function(float* array)
 {
 	Column_Counter=0,Line_Counter=0;
 	count=0;
 	Sum=0;
-	bool Check_OK=0;
-
+	Check_OK=0;
 		/* We take average of the  sample array in while loop. */
 		for(int i=0;i<Sample_Data_Number;i++)
 		{
@@ -312,7 +404,7 @@ float Error_Function(float* array)
 			Ac_Voltage_Value=(Median_Value*(float)43.04)/(float)100;
 
 			if((Median_Value>216)&&(Median_Value<230))
-			Ac_Voltage_Value=(Median_Value*(float)111.49)/(float)100;
+			Ac_Voltage_Value=(Median_Value*(float)113.49)/(float)100;
 
 			while((Line_Counter<66)&&(Check_OK==0))
 			{
@@ -399,25 +491,32 @@ int main(void)
 
   while (1)
   {
+
   	  	  	  //Calibration if-else.
 	 			if(Array_Counter<10)
 	 		 	{
-
 	 		 		Sample_Data_Array[Array_Counter]=g_elec_param_s.fl_voltage;
 	 		 		Array_Counter++;
 	 		 		HAL_TIM_Base_Start_IT(&htim6);
 	 		 	}
-	 		 	else
+	 			else
 	 		 	{
-	 		 		Rms_Voltage=Error_Function(Sample_Data_Array);
-					sprintf(buf,"AC=%.3f",Rms_Voltage );
-					LCD_OutString(buf,2);
-					LCD_OutString("Rms Voltage",1);
-					Array_Counter=0;
+	 					Rms_Voltage=Error_Function(Sample_Data_Array);
+	 					LCD_Init();
+	 					lcd_UpdateCounter++;
+						Array_Counter=0;
 				}
+	 			if(lcd_UpdateCounter==11)
+	 			{
 
+					sprintf(buf,"AC= %.3fV",Rms_Voltage );
+					LCD_OutString(buf,1);
+		 			sprintf(str,"AC= %.2fA",g_elec_param_s.fl_current );
+					LCD_OutString(str,2);
+					HAL_Delay(1000);
+					lcd_UpdateCounter=0;
 
-
+	 			}
 
 
 }
@@ -534,7 +633,7 @@ static void MX_ADC2_Init(void)
   /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
   */
   hadc2.Instance = ADC2;
-  hadc2.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc2.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
   hadc2.Init.Resolution = ADC_RESOLUTION_12B;
   hadc2.Init.ScanConvMode = DISABLE;
   hadc2.Init.ContinuousConvMode = DISABLE;
@@ -553,7 +652,7 @@ static void MX_ADC2_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_11;
   sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
   {
     Error_Handler();
