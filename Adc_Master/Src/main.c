@@ -338,117 +338,112 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
  *return i8_retval;
  * }
  * */
-
-float Rms_Voltage=0,temp,Average,Sum=0,Ac_Voltage_Value=0;  // Bitti.
-float Average_Array[30],Sample_Data_Array[80];				//Bitti.
-int Average_Counter=0,Array_Counter=0,count=0;				//Bitti.
-int Sample_Data_Number=10,Median_Value=0,Line_Counter=0,Column_Counter;	//bitti.
-
 float fl_rms_Voltage=0,fl_temp,fl_avg,fl_sum=0,fl_acVolt=0;
 float fl_avgArr[30],fl_sampleDataArr[80];
 uint8_t u8_avgCount=0, u8_arrCount=0,u8_medCount=0;
 uint8_t u8_sampleDataNum=10, u8_medVal=0,u8_lineCount=0,u8_columnCount=0;
 bool Check_OK=0;
+
 float Error_Function(float* array)
 {
-	Column_Counter=0,Line_Counter=0;
-	count=0;
-	Sum=0;
+	u8_columnCount=0,u8_lineCount=0;
+	u8_medCount=0;
+	fl_sum=0;
 	Check_OK=0;
 		/* We take average of the  sample array in while loop. */
-		for(int i=0;i<Sample_Data_Number;i++)
+		for(int i=0;i<u8_sampleDataNum;i++)
 		{
-			Sum=Sum+array[i];
+			fl_sum=fl_sum+array[i];
 
 		}
-		Average=Sum/(float)Sample_Data_Number;
+		fl_avg=fl_sum/(float)u8_sampleDataNum;
 
 
 
 		/* We write the average values into the array to calculate the median. */
-		if(Average_Counter<10)
+		if(u8_avgCount<10)
 		{
 
-		 Average_Array[Average_Counter]=Average;
-		 Average_Counter++;
+			fl_avgArr[u8_avgCount]=fl_avg;
+			u8_avgCount++;
 		}
 
 		else
 		{
-			Average_Counter=0;
+			u8_avgCount=0;
 
 			for(i=0;i<(10-1);i++)
 			{
 				for(int j=0;j<(10-1);j++)
 				{
-					if(Average_Array[j]>Average_Array[j+1])
+					if(fl_avgArr[j]>fl_avgArr[j+1])
 					{
-						temp=Average_Array[j];
-						Average_Array[j]=Average_Array[j+1];
-						Average_Array[j+1]=temp;
+						fl_temp=fl_avgArr[j];
+						fl_avgArr[j]=fl_avgArr[j+1];
+						fl_avgArr[j+1]=fl_temp;
 					}
 				}
 			}
 
-			Median_Value=Average_Array[5];
+			u8_medVal=fl_avgArr[5];
 		}
 
 		/* We have to ready. We will calculate Ac_Voltage. */
-		if(Average_Counter==0)
+		if(u8_avgCount==0)
 		{
 
 
 
 			/*I used if for values of 81 and below and values from 216 to 230.*/
-			if((Median_Value<81))
-			Ac_Voltage_Value=(Median_Value*(float)43.04)/(float)100;
+			if((u8_medVal<81))
+			fl_acVolt=(u8_medVal*(float)43.04)/(float)100;
 
-			if((Median_Value>216)&&(Median_Value<230))
-			Ac_Voltage_Value=(Median_Value*(float)113.49)/(float)100;
+			if((u8_medVal>216)&&(u8_medVal<230))
+				fl_acVolt=(u8_medVal*(float)113.49)/(float)100;
 
-			while((Line_Counter<66)&&(Check_OK==0))
+			while((u8_lineCount<66)&&(Check_OK==0))
 			{
-				Column_Counter=0;
+				u8_columnCount=0;
 
 				/* I calculate element number of line in array .*/
-				while (Error_Array[Line_Counter][Column_Counter+1] != 0)
+				while (Error_Array[u8_lineCount][u8_columnCount+1] != 0)
 				{
-					Column_Counter++;
+					u8_columnCount++;
 				}
 
 				/* I am trying to find the error factor by comparing the median value with the numbers in the array.*/
-				for(count=0;count<Column_Counter;)
+				for(u8_medCount=0;u8_medCount<u8_columnCount;)
 				{
 				    /* After finding the range of numbers in the array with the median value, I multiply by the error factor in index 0. */
-					if(Median_Value==Error_Array[Line_Counter][count+1])
+					if(u8_medVal==Error_Array[u8_lineCount][u8_medCount+1])
 					{
-						Ac_Voltage_Value=(Median_Value*Error_Array[Line_Counter][0])/(float)100;
+						fl_acVolt=(u8_medVal*Error_Array[u8_lineCount][0])/(float)100;
 						Check_OK=1;
 						break;
 					}
 
 
 					else
-					count++;
+						u8_medCount++;
 
 				}
 
 				/* As soon as I find the error multiplier, I get out of the while loop. */
 				if(Check_OK==1)
 				{
-					Line_Counter=0;
+					u8_lineCount=0;
 					break;
 				}
 				/* If I can't find the value, I increase j, the line counter. */
 				else
-					Line_Counter++;
+					u8_lineCount++;
 
 			}
 
 
 		}
 
-		return Ac_Voltage_Value;
+		return fl_acVolt;
 }
 
 
@@ -493,23 +488,23 @@ int main(void)
   {
 
   	  	  	  //Calibration if-else.
-	 			if(Array_Counter<10)
+	 			if(u8_arrCount<10)
 	 		 	{
-	 		 		Sample_Data_Array[Array_Counter]=g_elec_param_s.fl_voltage;
-	 		 		Array_Counter++;
+	 				fl_sampleDataArr[u8_arrCount]=g_elec_param_s.fl_voltage;
+	 		 		u8_arrCount++;
 	 		 		HAL_TIM_Base_Start_IT(&htim6);
 	 		 	}
 	 			else
 	 		 	{
-	 					Rms_Voltage=Error_Function(Sample_Data_Array);
+	 					fl_rms_Voltage=Error_Function(fl_sampleDataArr);
 	 					LCD_Init();
 	 					lcd_UpdateCounter++;
-						Array_Counter=0;
+						u8_arrCount=0;
 				}
 	 			if(lcd_UpdateCounter==11)
 	 			{
 
-					sprintf(buf,"AC= %.3fV",Rms_Voltage );
+					sprintf(buf,"AC= %.3fV",fl_rms_Voltage );
 					LCD_OutString(buf,1);
 		 			sprintf(str,"AC= %.2fA",g_elec_param_s.fl_current );
 					LCD_OutString(str,2);
