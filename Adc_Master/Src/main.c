@@ -109,14 +109,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		{
 			i=0;
 			HAL_TIM_Base_Stop_IT(&htim6);
-			calc_Voltage(channel_voltage);		// Go to calc_voltage function and calculate rms.
-			calc_Current(channel_voltage_2);		// Go to calc_voltage function and calculate rms.
+			elecParamCalc_Voltage(channel_voltage);
+			elecParamCalc_Current(channel_voltage_2);
 		}
 
 
 
 
 }
+
 int main(void)
 {
   /* MCU Configuration--------------------------------------------------------*/
@@ -162,19 +163,21 @@ int main(void)
 	 		 		u8_arrCount++;
 	 		 		HAL_TIM_Base_Start_IT(&htim6);
 	 		 	}
+
 	 			else
 	 		 	{
-	 					fl_rms_Voltage=Calibration_Function(fl_sampleDataArr);
+	 					fl_rms_Voltage=elecParamCalc_Calibration(fl_sampleDataArr);
 	 					LCD_Init();
 	 					lcd_UpdateCounter++;
 						u8_arrCount=0;
 				}
+
 	 			if(lcd_UpdateCounter==11)
 	 			{
 
-					sprintf(buf,"AC= %.3fV",fl_rms_Voltage );
+					sprintf(buf,"AC VOLT= %.3fV",fl_rms_Voltage );
 					LCD_OutString(buf,1);
-		 			sprintf(str,"AC= %.2fA",g_elec_param_s.fl_current );
+		 			sprintf(str,"AC AMP = %.2fA",g_elec_param_s.fl_current );
 					LCD_OutString(str,2);
 					HAL_Delay(1000);
 					lcd_UpdateCounter=0;
