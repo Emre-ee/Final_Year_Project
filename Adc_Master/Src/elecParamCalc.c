@@ -116,7 +116,7 @@ uint8_t elecParamCalc_Rms(uint8_t mode,float* fl_adcval,struct elec_params* elec
 	/* Adc adc_value_data counter */
 	uint8_t u8_i;
 
-	/* Voltage Variables */
+	/* Rms Variables */
 	float fl_sum=0;
 	float fl_sample=0;
 
